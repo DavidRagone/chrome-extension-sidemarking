@@ -4,30 +4,20 @@
     currentTab;
 
   /**
-   * Get the current URL.
-   * Via https://developer.chrome.com/extensions/getstarted
-   *
-   * @param {function(string)} callback - called when the URL of the current tab
-   *   is found.
-   **/
-  function getCurrentTabInfo(callback) {
-    var queryInfo = {
-      active: true,
-      currentWindow: true
-    };
+   * Attach handlers, retrieve data
+   */
+  document.addEventListener('DOMContentLoaded', function() {
+    getAll();
 
-    chrome.tabs.query(queryInfo, function(tabs) {
-      // chrome.tabs.query invokes the callback with a list of tabs that match the
-      // query. When the popup is opened, there is certainly a window and at least
-      // one tab, so we can safely assume that |tabs| is a non-empty array.
-      // A window can only have one active tab at a time, so the array consists of
-      // exactly one tab.
-      var tab = tabs[0];
-
-      // See https://developer.chrome.com/extensions/tabs#type-Tab
-      callback(tab);
+    getCurrentTabInfo(function(tab) {
+      currentTab = tab;
+      document.getElementById('tabTitle').textContent = currentTab.title;
     });
-  }
+
+    document.getElementById("save").addEventListener("click", save);
+    document.getElementById("viewAll").addEventListener("click", viewAll);
+    document.getElementById("closeSidebar").addEventListener("click", closePopup);
+  });
 
   /**
    * Save the current page to sidemark list. Uses synced Chrome storage
@@ -57,6 +47,48 @@
     var toSave = {};
     toSave[currentTab.url] = { title: currentTab.title, tags: taggedWith };
     chrome.storage.sync.set(toSave, afterSave);
+  }
+
+  /**
+   * Display a list of all previously saved urls, filterable by tags and
+   *   searchable (indexed)
+   */
+  function viewAll() {
+    var sideMarkingData = {
+      tags: tags,
+      urls: urls
+    }
+    chrome.tabs.executeScript(
+      null,
+      { code: "var sideMarking = " + JSON.stringify(sideMarkingData) },
+      function() { chrome.tabs.executeScript(null, { file: "insert.js" }); }
+    );
+  }
+
+  /**
+   * Get the current URL.
+   * Via https://developer.chrome.com/extensions/getstarted
+   *
+   * @param {function(string)} callback - called when the URL of the current tab
+   *   is found.
+   **/
+  function getCurrentTabInfo(callback) {
+    var queryInfo = {
+      active: true,
+      currentWindow: true
+    };
+
+    chrome.tabs.query(queryInfo, function(tabs) {
+      // chrome.tabs.query invokes the callback with a list of tabs that match the
+      // query. When the popup is opened, there is certainly a window and at least
+      // one tab, so we can safely assume that |tabs| is a non-empty array.
+      // A window can only have one active tab at a time, so the array consists of
+      // exactly one tab.
+      var tab = tabs[0];
+
+      // See https://developer.chrome.com/extensions/tabs#type-Tab
+      callback(tab);
+    });
   }
 
   /**
@@ -92,16 +124,6 @@
   }
 
   /**
-   * Display a list of all previously saved urls, filterable by tags and
-   *   searchable (indexed)
-   */
-  function viewAll() {
-    debugger
-    console.log(urls);
-    console.log("tags: ", tags);
-  }
-
-  /**
    * Closes the pop-up window
    */
   function closePopup() {
@@ -121,21 +143,5 @@
       callback.call(null, items[i], i, items);
     }
   }
-
-  /**
-   * Attach handlers, retrieve data
-   */
-  document.addEventListener('DOMContentLoaded', function() {
-    getAll();
-
-    getCurrentTabInfo(function(tab) {
-      currentTab = tab;
-      document.getElementById('tabTitle').textContent = currentTab.title;
-    });
-
-    document.getElementById("save").addEventListener("click", save);
-    document.getElementById("viewAll").addEventListener("click", viewAll);
-    document.getElementById("closeSidebar").addEventListener("click", closePopup);
-  });
 
 })();
