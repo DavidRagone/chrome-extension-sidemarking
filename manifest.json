@@ -7,6 +7,12 @@
     "default_icon": "bookmark-icon-64x64.png",
     "default_popup": "popup.html"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["background.js"]
+    }
+  ],
   "permissions": [
     "activeTab",
     "storage",

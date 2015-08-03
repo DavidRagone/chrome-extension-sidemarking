@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+function requestListener(requestMessage, sender, sendResponse) {
+  console.log("requesting: " + requestMessage);
+  sendResponse('foo found');
+}
+chrome.runtime.onMessage.addListener(requestListener);
+    </script>
+  </head>
+</html>
